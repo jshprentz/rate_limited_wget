@@ -1,0 +1,5 @@
+# Ignore ShellSpec testing artifacts
+.shellspec-local
+.shellspec-quick.log
+report/
+coverage/
