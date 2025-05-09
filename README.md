@@ -1,2 +1,2 @@
-# pace-wget
-Pace wget requests to not exceed rate limits.
+# rate_limited_wget
+Respect website and API rate limits when retrieving with ```wget```.
