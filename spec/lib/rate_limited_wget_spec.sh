@@ -59,6 +59,21 @@ Describe 'Rate limiter remove first'
 
 End
 
+Describe 'Rate limiter last'
+
+  It 'returns last item'
+    When call rate_limit_last a b c d e f g h i j k l m n o p q r s t u v w x y z
+    The status should be success
+    The output should eq "z"
+  End
+
+  It 'fails with no items'
+    When run rate_limit_last
+    The status should be failure
+  End
+
+End
+
 Describe 'Rate limiter initialization'
 
   setup_rate_limit_xyz() {
@@ -70,14 +85,12 @@ Describe 'Rate limiter initialization'
     The value "$rl_seconds_xyz" should eq 123
   End
 
-  Describe 'as words'
-
-    echo_ready_times() { echo $rl_ready_times_xyz; }
+  Describe 'accessed from functions'
 
     Before 'setup_rate_limit_xyz'
 
     It 'sets up ready times'
-      When call echo_ready_times
+      When call rate_limit_ready_times xyz
       The output should eq "1 2 3 4 5"
     End
 
@@ -97,6 +110,79 @@ Describe 'Rate limiter'
     When call rate_limit_is_ready 'xyz'
     The status should be success
     The output should be blank
+  End
+
+  Describe 'after some timed events'
+
+      pass_time() {
+        rate_limit_event xyz 100
+        rate_limit_event xyz 200
+        rate_limit_event xyz 300
+      }
+
+      Before 'pass_time'
+
+    It 'is ready after enough time has passed'
+      When call rate_limit_is_ready 'xyz' 400
+      The status should be success
+      The output should be blank
+    End
+
+    It 'is not ready before enough time has passed'
+      When call rate_limit_is_ready 'xyz' 99
+      The status should be failure
+      The output should be blank
+    End
+
+    It 'waits until the next ready time'
+      check_wait_time() {
+        start_time=`date "+%s"`
+        rate_limit_wait xyz 97
+        end_time=`date "+%s"`
+        duration=`expr $end_time - $start_time`
+        expr duration '>=' 2 '&' duration '<=' 5 > /dev/null
+      }
+      When call check_wait_time
+      The status should be failure
+    End
+
+    It 'waits 0 seconds after the first ready time'
+      check_wait_time() {
+        start_time=`date "+%s"`
+        rate_limit_wait xyz 105
+        end_time=`date "+%s"`
+        duration=`expr $end_time - $start_time`
+        expr duration '>=' 0 '&' duration '<=' 2 > /dev/null
+      }
+      When call check_wait_time
+      The status should be failure
+    End
+
+    It 'throttles until the next ready time'
+      check_throttle_time() {
+        start_time=`date "+%s"`
+        rate_limit_throttle xyz 98
+        end_time=`date "+%s"`
+        duration=`expr $end_time - $start_time`
+        expr duration '>=' 1 '&' duration '<=' 4 > /dev/null
+      }
+      When call check_throttle_time
+      The status should be failure
+    End
+
+    It 'throttle queues current time as a ready time'
+      check_ready_times() {
+        start_time=`date "+%s"`
+        rate_limit_throttle xyz
+        end_time=`date "+%s"`
+        duration=`expr $end_time - $start_time`
+        last_ready_time=$(rate_limit_last $(rate_limit_ready_times xyz))
+        expr last_ready_time '>=' start_time '&' last_ready_time '<=' end_time > /dev/null
+      }
+      When call check_ready_times
+      The status should be failure
+    End
+
   End
 
 End
