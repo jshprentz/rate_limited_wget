@@ -1,38 +1,5 @@
-# init_rate_limit name event_count duration
+# ========= Shell Utilities =========
 #
-# Initialize a rate limit
-#
-# Arguments
-#   Name of the rate limit: unique shell variable name
-#   Number of events allowed during some time period
-#   Duration of the time period in seconds
-#
-# Globals Created
-#   rl_seconds_<name>: duration of the time period in seconds
-#   rl_ready_times_<name>: list of ready times in Linux epoch seconds,
-#     initially times long before now
-
-init_rate_limit() {
-	eval "rl_seconds_$1=$3"
-	eval "rl_ready_times_$1=\`seq $2\`"
-}
-
-# rate_limit_ready_times name
-#
-# Report ready times for the named rate limit 
-#
-# Arguments
-#   Name of the rate limit: previously used by init_rate_limit
-#
-# Output
-#   List of ready times in Linux epoch seconds
-# 
-# Returns
-#   0 if successful; non-zero otherwise
-
-rate_limit_ready_times() {
-	eval "echo "'$'"rl_ready_times_$1"
-}
 
 # rate_limit_now [time]
 #
@@ -64,6 +31,7 @@ rate_limit_now() {
 #
 # Returns
 #   0 if the list has a first item; non-zero otherwise
+
 rate_limit_first() {
 	if [ $# -gt 0 ]; then
 		echo "$1"
@@ -84,6 +52,7 @@ rate_limit_first() {
 #
 # Returns
 #   0 if the list has a first item; non-zero otherwise
+
 rate_limit_remove_first() {
 	if [ $# -gt 0 ]; then
 		shift
@@ -119,6 +88,45 @@ rate_limit_last_helper() {
 	echo $1
 }
 
+# ========= Rate Limits =========
+#
+
+# init_rate_limit name event_count duration
+#
+# Initialize a rate limit
+#
+# Arguments
+#   Name of the rate limit: unique shell variable name
+#   Number of events allowed during some time period
+#   Duration of the time period in seconds
+#
+# Globals Created
+#   rl_seconds_<name>: duration of the time period in seconds
+#   rl_ready_times_<name>: list of ready times in Linux epoch seconds,
+#     initially times long before now
+
+init_rate_limit() {
+	eval "rl_seconds_$1=$3"
+	eval "rl_ready_times_$1=\`seq $2\`"
+}
+
+# rate_limit_ready_times name
+#
+# Report ready times for the named rate limit
+#
+# Arguments
+#   Name of the rate limit: previously used by init_rate_limit
+#
+# Output
+#   List of ready times in Linux epoch seconds
+#
+# Returns
+#   0 if successful; non-zero otherwise
+
+rate_limit_ready_times() {
+	eval "echo "'$'"rl_ready_times_$1"
+}
+
 # rate_limit_is_ready name [time]
 #
 # Test whether a rate limit is ready
@@ -126,7 +134,7 @@ rate_limit_last_helper() {
 # Arguments
 #   Name of the rate limit: previously used by init_rate_limit
 #   The time to check (optional, default now) in Linux Epoch seconds
-# 
+#
 # Returns
 #   0 if that name's first ready time is earlier than now
 #   non-zero otherwise
@@ -148,7 +156,7 @@ rate_limit_is_ready() {
 #
 # Global variables updated
 #   rl_ready_times_<name>: list of ready times in Linux epoch seconds
-# 
+#
 # Returns
 #   0 if successful; non-zero otherwise
 
@@ -161,7 +169,7 @@ rate_limit_event() {
 
 # rate_limit_wait name [time]
 #
-# Wait until a rate limit's first ready time 
+# Wait until a rate limit's first ready time
 #
 # Arguments
 #   Name of the rate limit: previously used by init_rate_limit
