@@ -202,4 +202,48 @@ rate_limit_throttle() {
 	rate_limit_event $1
 }
 
+# ========= Rate Limited Wget =========
+#
+
+# init_wget_rate_limit count duration host...
+#
+# Initialze a wget rate limit and assign it a name of the form "wget_<i>"
+#
+# Arguments
+#   Number of events allowed during some time period
+#   Duration of the time period in seconds
+#   Hosts to which the rate limits apply
+#
+# Globals Created or Modified
+#   wget_rate_limits: a mapping of hosts to rate limit names
+#   rl_seconds_<name>: duration of the time period in seconds
+#   rl_ready_times_<name>: list of ready times in Linux epoch seconds,
+#     initially times long before now
+
+init_wget_rate_limit() {
+	name=`next_wget_name $wget_rate_limits`
+	init_rate_limit $name $1 $2
+	shift 2
+	until [ $# -eq 0 ]
+	do
+		wget_rate_limits="$wget_rate_limits $1 $name"
+		shift
+	done
+}
+
+# next_wget_name wget_rate_limits
+#
+# Choose the next wget rate limit name
+#
+# Arguments
+#   wget_rate_limits: a mapping of hosts to rate limit names
+#
+# Output
+#   The new name
+
+next_wget_name() {
+	echo "wget_"$(expr $# / 2 + 1)
+}
+
+
 # vim: tabstop=8: autoindent

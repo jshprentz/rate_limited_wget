@@ -187,4 +187,18 @@ Describe 'Rate limiter'
 
 End
 
+Describe 'Initialization of wget rate limiters'
+
+  wget_1_ready_times() {
+    rate_limit_ready_times wget_1
+  }
+
+  It 'sets up a rate limit with two hosts'
+    When call init_wget_rate_limit 5 50 example.com sample.com
+    The value "$wget_rate_limits" should eq " example.com wget_1 sample.com wget_1"
+    The value "$rl_seconds_wget_1" should eq 50
+    The result of function wget_1_ready_times should eq "1 2 3 4 5"
+  End
+End
+
 # vim: tabstop=8: expandtab shiftwidth=2 softtabstop=2 autoindent
