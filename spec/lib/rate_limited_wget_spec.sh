@@ -193,12 +193,62 @@ Describe 'Initialization of wget rate limiters'
     rate_limit_ready_times wget_1
   }
 
+  wget_3_ready_times() {
+    rate_limit_ready_times wget_3
+  }
+
   It 'sets up a rate limit with two hosts'
     When call init_wget_rate_limit 5 50 example.com sample.com
     The value "$wget_rate_limits" should eq " example.com wget_1 sample.com wget_1"
     The value "$rl_seconds_wget_1" should eq 50
     The result of function wget_1_ready_times should eq "1 2 3 4 5"
   End
+
+  Describe 'after setting up a rate limit with two hosts'
+
+    setup_first_wget_rate_limit() {
+      init_wget_rate_limit 5 50 example.com sample.com
+    }
+
+    Before 'setup_first_wget_rate_limit'
+
+    It 'sets up a rate limit with one host'
+      When call init_wget_rate_limit 4 60 foo.com
+      The value "$wget_rate_limits" should eq " example.com wget_1 sample.com wget_1 foo.com wget_3"
+      The value "$rl_seconds_wget_3" should eq 60
+      The result of function wget_3_ready_times should eq "1 2 3 4"
+    End
+
+  End
+
+End
+
+Describe 'Extraction of hosts from arguments'
+
+  wget_hosts_normalized() {
+    echo `wget_hosts $*`
+  }
+
+  It 'finds a single host'
+    When call wget_hosts https://example.com/foo/bar.html
+    The output should eq "example.com"
+  End
+
+  It 'finds multiple hosts'
+    When call wget_hosts_normalized https://example.com/foo/bar.html http://www.sample.com/blog/
+    The output should eq "example.com www.sample.com"
+  End
+
+  It 'finds repeated hosts'
+    When call wget_hosts_normalized https://www.sample.com/foo/bar.html http://www.sample.com/blog/
+    The output should eq "www.sample.com www.sample.com"
+  End
+
+  It 'finds a host in typical wget arguments'
+    When call wget_hosts -q "https://github.com/asterisk/dahdi-linux/commit/12345.patch" -O /tmp/12345..patch --no-cache
+    The output should eq "github.com"
+  End
+
 End
 
 # vim: tabstop=8: expandtab shiftwidth=2 softtabstop=2 autoindent

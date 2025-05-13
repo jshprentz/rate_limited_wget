@@ -245,5 +245,18 @@ next_wget_name() {
 	echo "wget_"$(expr $# / 2 + 1)
 }
 
+# wget_hosts arg...
+#
+# List unique hosts found among URLs in the arguments
+#
+# Arguments
+#   wget arguments
+#
+# Output
+#   HTTP hosts 
+
+wget_hosts() {
+	printf "%s\n" $* | sed -n -E 's/^https?:\/\/([^:/?]*).*/\1/p'
+}
 
 # vim: tabstop=8: autoindent
