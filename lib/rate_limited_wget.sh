@@ -247,7 +247,7 @@ next_wget_name() {
 
 # wget_hosts arg...
 #
-# List unique hosts found among URLs in the arguments
+# List hosts found among URLs in the arguments
 #
 # Arguments
 #   wget arguments
@@ -257,6 +257,48 @@ next_wget_name() {
 
 wget_hosts() {
 	printf "%s\n" $* | sed -n -E 's/^https?:\/\/([^:/?]*).*/\1/p'
+}
+
+# wget_rate_limits_for_host host [host name]...
+#
+# Report the rate limit names for a host
+#
+# Arguments
+#   Host for which to find rate limit names
+#   [host name] pairs, typically from wget_rate_limits
+#
+# Output
+#   Rate limit names
+
+wget_rate_limits_for_host() {
+	target_host="$1"
+	shift
+	until [ $# -eq 0 ]
+	do
+		if [ "$target_host" = "$1" ]
+		then
+			echo "$2"
+		fi
+		shift 2
+	done
+}
+
+# wget_rate_limits_for_hosts host...
+#
+# Report the rate limit names for a list of hosts
+#
+# Arguments
+#   Hosts
+#
+# Output
+#   Rate limit names
+
+wget_rate_limits_for_hosts() {
+	until [ $# -eq 0 ]
+	do
+		wget_rate_limits_for_host $1 $wget_rate_limits
+		shift
+	done
 }
 
 # vim: tabstop=8: autoindent

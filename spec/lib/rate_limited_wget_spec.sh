@@ -251,4 +251,30 @@ Describe 'Extraction of hosts from arguments'
 
 End
 
+Describe 'Host lookup to find range limits'
+
+wget_rate_limits_for_hosts_normalized() {
+    echo `wget_rate_limits_for_hosts $*`
+  }
+
+  setup_wget_rate_limit() {
+    init_wget_rate_limit 5 50 example.com sample.com
+    init_wget_rate_limit 4 60 sample.com www.sample.com
+    init_wget_rate_limit 3 70 github.com
+  }
+
+  Before 'setup_wget_rate_limit'
+
+  It 'finds a host and returns a name'
+    When call wget_rate_limits_for_host example.com sample.com wget_1 example.com wget_2 foo.com wget_3
+    The output should eq "wget_2"
+  End
+
+  It 'finds hosts and returns multiple names'
+    When call wget_rate_limits_for_hosts_normalized github.com sample.com gitlab.com
+    The output should eq "wget_5 wget_1 wget_3"
+  End
+
+End
+
 # vim: tabstop=8: expandtab shiftwidth=2 softtabstop=2 autoindent
