@@ -127,6 +127,23 @@ rate_limit_ready_times() {
 	eval "echo "'$'"rl_ready_times_$1"
 }
 
+# rate_limit_seconds name
+#
+# Report the duration of the named rate limit
+#
+# Arguments
+#   Name of the rate limit: previously used by init_rate_limit
+#
+# Output
+#   Duration of the time period in seconds
+#
+# Returns
+#   0 if successful; non-zero otherwise
+
+rate_limit_seconds() {
+	eval "echo "'$'"rl_seconds_$1"
+}
+
 # rate_limit_is_ready name [time]
 #
 # Test whether a rate limit is ready
@@ -164,7 +181,30 @@ rate_limit_event() {
 	ready_times=`rate_limit_ready_times $1`
 	retained_ready_times=`rate_limit_remove_first $ready_times`
 	now=`rate_limit_now $2`
-	eval "rl_ready_times_$1='$retained_ready_times $now'"
+	duration=`rate_limit_seconds $1`
+	next_ready_time=`expr $now + $duration`
+	eval "rl_ready_times_$1='$retained_ready_times $next_ready_time'"
+}
+
+# rate_limit_events name...
+#
+# Record rate limit events
+#
+# Arguments
+#   Names of rate limits
+#
+# Global variables updated
+#   rl_ready_times_<name>: list of ready times in Linux epoch seconds
+#
+# Returns
+#   0 if successful; non-zero otherwise
+
+rate_limit_events() {
+	now=`rate_limit_now`
+	for name
+	do
+		rate_limit_event $name $now
+	done
 }
 
 # rate_limit_wait name [time]
@@ -186,6 +226,23 @@ rate_limit_wait() {
 		sleep_time=$(expr $(rate_limit_first $ready_times) - $now)
 		sleep $sleep_time
 		now=`date "+%s"`
+	done
+}
+
+#  wait_for_rate_limits name...
+#
+#  Wait until the ready times of the named rate limits
+#
+#  Arguments
+#    Names of rate limits
+#
+# Returns
+#   The failing status of the test terminating the loop; this may be ignored
+
+wait_for_rate_limits() {
+	for name
+	do
+		rate_limit_wait $name
 	done
 }
 
@@ -299,6 +356,33 @@ wget_rate_limits_for_hosts() {
 		wget_rate_limits_for_host $1 $wget_rate_limits
 		shift
 	done
+}
+
+# rate_limited_wget args
+#
+# Run wget with the supplied arguments after waiting for any rate limits
+#
+# Arguments
+#   See wget(1), for example at https://www.gnu.org/software/wget/manual/wget.html
+#
+# Outputs
+#   See wget(1)
+#
+# Status
+#   See wget(1)
+#
+# Globals Created or Modified
+#   rl_ready_times_<name>: list of ready times in Linux epoch seconds,
+#     initially times long before now
+
+rate_limited_wget() {
+	hosts=`wget_hosts $*`
+	rate_limits=`wget_rate_limits_for_hosts $hosts`
+	wait_for_rate_limits $rate_limits
+	wget !*
+	status=$?
+	rate_limit_events $rate_limits
+	exit $status
 }
 
 # vim: tabstop=8: autoindent

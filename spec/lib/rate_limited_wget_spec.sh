@@ -137,31 +137,31 @@ Describe 'Rate limiter'
     It 'waits until the next ready time'
       check_wait_time() {
         start_time=`date "+%s"`
-        rate_limit_wait xyz 97
+        rate_limit_wait xyz 114
         end_time=`date "+%s"`
         duration=`expr $end_time - $start_time`
-        expr duration '>=' 2 '&' duration '<=' 5 > /dev/null
+        test $duration -ge 2 && test $duration -le 5
       }
       When call check_wait_time
-      The status should be failure
+      The status should be success
     End
 
     It 'waits 0 seconds after the first ready time'
       check_wait_time() {
         start_time=`date "+%s"`
-        rate_limit_wait xyz 105
+        rate_limit_wait xyz 118
         end_time=`date "+%s"`
         duration=`expr $end_time - $start_time`
-        expr duration '>=' 0 '&' duration '<=' 2 > /dev/null
+        test $duration -ge 0 && test $duration -le 2
       }
       When call check_wait_time
-      The status should be failure
+      The status should be success
     End
 
     It 'throttles until the next ready time'
       check_throttle_time() {
         start_time=`date "+%s"`
-        rate_limit_throttle xyz 98
+        rate_limit_throttle xyz 115
         end_time=`date "+%s"`
         duration=`expr $end_time - $start_time`
         expr duration '>=' 1 '&' duration '<=' 4 > /dev/null
@@ -183,6 +183,36 @@ Describe 'Rate limiter'
       The status should be failure
     End
 
+  End
+
+End
+
+Describe 'Multiple rate limiters'
+
+  setup_rate_limits() {
+    init_rate_limit abc 2 2
+    init_rate_limit xyz 2 5
+  }
+
+  preload_events() {
+    rate_limit_event abc
+    rate_limit_event abc
+    rate_limit_event xyz
+    rate_limit_event xyz
+  }
+
+  Before 'setup_rate_limits' 'preload_events'
+
+  It 'waits for all limits'
+    check_wait_time() {
+      start_time=`date "+%s"`
+      wait_for_rate_limits abc xyz
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -ge 4 && test $duration -le 6
+    }
+    When call check_wait_time
+    The status should be success
   End
 
 End
