@@ -215,6 +215,56 @@ Describe 'Multiple rate limiters'
     The status should be success
   End
 
+  It 'rate limits events with different names'
+    rate_limit_different_events() {
+      start_time=`date "+%s"`
+      rate_limit_events abc xyz
+      end_time=`date "+%s"`
+      last_abc=$(rate_limit_last $(rate_limit_ready_times abc))
+      last_xyz=$(rate_limit_last $(rate_limit_ready_times xyz))
+      status=1
+      if [ `expr $last_abc + 3` -ne $last_xyz ]; then
+        echo "last_abc:" $last_abc "+ 3 != last_xyz:" $last_xyz
+      elif [ `expr $start_time + 1` -gt $last_abc ]; then
+        echo "start_time:" $start_time "+ 1 > last_abc:" $last_abc
+      elif [ `expr $start_time + 3` -lt $last_abc ]; then
+        echo "start_time:" $start_time "+ 3 < last_abc:" $last_abc
+      elif [ `expr $start_time + 4` -gt $last_xyz ]; then
+        echo "start_time:" $start_time "+ 4 > last_xyz:" $last_xyz
+      elif [ `expr $start_time + 6` -lt $last_xyz ]; then
+        echo "start_time:" $start_time "+ 6 < last_xyz:" $last_xyz
+      else
+        status=0
+      fi
+      return $status
+    }
+    When call rate_limit_different_events
+    The status should be success
+  End
+
+  It 'rate limits events with identical names'
+    rate_limit_different_events() {
+      start_time=`date "+%s"`
+      rate_limit_events abc abc
+      end_time=`date "+%s"`
+      first_abc=$(rate_limit_first $(rate_limit_ready_times abc))
+      last_abc=$(rate_limit_last $(rate_limit_ready_times abc))
+      status=1
+      if [ $first_abc -ne $last_abc ]; then
+        echo "first_abc:" $first_abc "!= last_abc:" $last_abc
+      elif [ `expr $start_time + 1` -gt $last_abc ]; then
+        echo "start_time:" $start_time "+ 1 > last_abc:" $last_abc
+      elif [ `expr $start_time + 3` -lt $last_abc ]; then
+        echo "start_time:" $start_time "+ 3 < last_abc:" $last_abc
+      else
+        status=0
+      fi
+      return $status
+    }
+    When call rate_limit_different_events
+    The status should be success
+  End
+
 End
 
 Describe 'Initialization of wget rate limiters'
