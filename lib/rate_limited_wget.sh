@@ -281,10 +281,9 @@ init_wget_rate_limit() {
 	_iwrl_name=`next_wget_name $wget_rate_limits`
 	init_rate_limit $_iwrl_name $1 $2
 	shift 2
-	until [ $# -eq 0 ]
+	for _iwrl_host
 	do
-		wget_rate_limits="$wget_rate_limits $1 $_iwrl_name"
-		shift
+		wget_rate_limits="$wget_rate_limits $_iwrl_host $_iwrl_name"
 	done
 }
 
@@ -351,10 +350,9 @@ wget_rate_limits_for_host() {
 #   Rate limit names
 
 wget_rate_limits_for_hosts() {
-	until [ $# -eq 0 ]
+	for _wrlfh_host
 	do
-		wget_rate_limits_for_host $1 $wget_rate_limits
-		shift
+		wget_rate_limits_for_host $_wrlfh_host $wget_rate_limits
 	done
 }
 
