@@ -379,7 +379,7 @@ rate_limited_wget() {
 	_rlwg_hosts=`wget_hosts $*`
 	_rlwg_rate_limits=`wget_rate_limits_for_hosts $_rlwg_hosts`
 	wait_for_rate_limits $_rlwg_rate_limits
-	wget "!@"
+	wget "$@"
 	_rlwg_status=$?
 	rate_limit_events $_rlwg_rate_limits
 	return $_rlwg_status

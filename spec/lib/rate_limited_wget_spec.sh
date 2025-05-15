@@ -357,4 +357,76 @@ wget_rate_limits_for_hosts_normalized() {
 
 End
 
+Describe 'Rate limited wget'
+
+  setup_example_wget_rate_limit() {
+    init_wget_rate_limit 3 2 example.com
+  }
+
+  Before 'setup_example_wget_rate_limit'
+
+  It 'runs wget with all supplied arguments'
+    wget() {
+      echo "$@"
+    }
+    When call rate_limited_wget -q "https://raw.githubusercontent.com/InterLinked1/astdocgen/master/astdocgen.php" -O astdocgen.php --no-cache
+    The output should eq "-q https://raw.githubusercontent.com/InterLinked1/astdocgen/master/astdocgen.php -O astdocgen.php --no-cache"
+    End
+
+  It 'does not delay the first few requests'
+    wget() {
+      true
+    }
+    check_elapsed_time() {
+      start_time=`date "+%s"`
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -le 1
+    }
+    When call check_elapsed_time
+    The status should be success
+  End
+
+  It 'delays the request after the rate limit is satisfied'
+    wget() {
+      true
+    }
+    check_elapsed_time() {
+      start_time=`date "+%s"`
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -ge 2 && test $duration -le 4
+    }
+    When call check_elapsed_time
+    The status should be success
+  End
+
+  It 'delays requests after the rate limit is satisfied'
+    wget() {
+      sleep 1
+    }
+    check_elapsed_time() {
+      start_time=`date "+%s"`
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      rate_limited_wget https://example.com/foo/bar.html
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -ge 3 && test $duration -le 5
+    }
+    When call check_elapsed_time
+    The status should be success
+  End
+
+End
+
 # vim: tabstop=8: expandtab shiftwidth=2 softtabstop=2 autoindent
