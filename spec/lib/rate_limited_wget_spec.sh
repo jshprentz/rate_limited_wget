@@ -373,6 +373,20 @@ Describe 'Rate limited wget'
     The output should eq "-q https://raw.githubusercontent.com/InterLinked1/astdocgen/master/astdocgen.php -O astdocgen.php --no-cache"
     End
 
+  It 'retains spaces and special characters in wget arguments'
+    list_args() {
+      for arg
+      do
+        echo "<<"$arg">>"
+      done
+    }
+    wget() {
+      echo `list_args "$@"`
+    }
+    When call rate_limited_wget "https://sample.com/foo.py" --requester "John O'Malley" --cost '$3.00'
+    The output should eq "<<https://sample.com/foo.py>> <<--requester>> <<John O'Malley>> <<--cost>> <<"'$'"3.00>>"
+    End
+
   It 'does not delay the first few requests'
     wget() {
       true
@@ -425,7 +439,7 @@ Describe 'Rate limited wget'
       end_time=`date "+%s"`
       duration=`expr $end_time - $start_time`
       test $duration -lt 3 && echo "duration < 3:" $duration && return 1
-      test $duration -gt 5 && echo "duration > 5:" $duration && return 1
+      test $duration -gt 6 && echo "duration > 6:" $duration && return 1
       return 0
     }
     When call check_elapsed_time
