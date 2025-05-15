@@ -384,7 +384,8 @@ Describe 'Rate limited wget'
       rate_limited_wget https://example.com/foo/bar.html
       end_time=`date "+%s"`
       duration=`expr $end_time - $start_time`
-      test $duration -le 1
+      test $duration -gt 1 && echo "duration > 1:" $duration && return 1
+      return 0
     }
     When call check_elapsed_time
     The status should be success
@@ -402,7 +403,9 @@ Describe 'Rate limited wget'
       rate_limited_wget https://example.com/foo/bar.html
       end_time=`date "+%s"`
       duration=`expr $end_time - $start_time`
-      test $duration -ge 2 && test $duration -le 4
+      test $duration -lt 2 && echo "duration < 2:" $duration && return 1
+      test $duration -gt 4 && echo "duration > 4:" $duration && return 1
+      return 0
     }
     When call check_elapsed_time
     The status should be success
@@ -421,7 +424,9 @@ Describe 'Rate limited wget'
       rate_limited_wget https://example.com/foo/bar.html
       end_time=`date "+%s"`
       duration=`expr $end_time - $start_time`
-      test $duration -ge 3 && test $duration -le 5
+      test $duration -lt 3 && echo "duration < 3:" $duration && return 1
+      test $duration -gt 5 && echo "duration > 5:" $duration && return 1
+      return 0
     }
     When call check_elapsed_time
     The status should be success
