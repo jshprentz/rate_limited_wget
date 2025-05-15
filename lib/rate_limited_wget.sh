@@ -157,10 +157,10 @@ rate_limit_seconds() {
 #   non-zero otherwise
 
 rate_limit_is_ready() {
-	ready_times=`rate_limit_ready_times $1`
-	first_ready_time=`rate_limit_first $ready_times`
-	now=`rate_limit_now $2`
-	test $now -ge $first_ready_time
+	_rlir_ready_times=`rate_limit_ready_times $1`
+	_rlir_first_ready_time=`rate_limit_first $_rlir_ready_times`
+	_rlir_now=`rate_limit_now $2`
+	test $_rlir_now -ge $_rlir_first_ready_time
 }
 
 # rate_limit_event name [time]
@@ -178,12 +178,12 @@ rate_limit_is_ready() {
 #   0 if successful; non-zero otherwise
 
 rate_limit_event() {
-	ready_times=`rate_limit_ready_times $1`
-	retained_ready_times=`rate_limit_remove_first $ready_times`
-	now=`rate_limit_now $2`
-	duration=`rate_limit_seconds $1`
-	next_ready_time=`expr $now + $duration`
-	eval "rl_ready_times_$1='$retained_ready_times $next_ready_time'"
+	_rle_ready_times=`rate_limit_ready_times $1`
+	_rle_retained_ready_times=`rate_limit_remove_first $_rle_ready_times`
+	_rle_now=`rate_limit_now $2`
+	_rle_duration=`rate_limit_seconds $1`
+	_rle_next_ready_time=`expr $_rle_now + $_rle_duration`
+	eval "rl_ready_times_$1='$_rle_retained_ready_times $_rle_next_ready_time'"
 }
 
 # rate_limit_events name...
@@ -200,10 +200,10 @@ rate_limit_event() {
 #   0 if successful; non-zero otherwise
 
 rate_limit_events() {
-	now=`rate_limit_now`
+	_rles_now=`rate_limit_now`
 	for name
 	do
-		rate_limit_event $name $now
+		rate_limit_event $name $_rles_now
 	done
 }
 
@@ -219,13 +219,13 @@ rate_limit_events() {
 #   The failing status of the test terminating the loop; this may be ignored
 
 rate_limit_wait() {
-	ready_times=`rate_limit_ready_times $1`
-	now=`rate_limit_now $2`
-	until rate_limit_is_ready $1 $now
+	_rlw_ready_times=`rate_limit_ready_times $1`
+	_rlw_now=`rate_limit_now $2`
+	until rate_limit_is_ready $1 $_rlw_now
 	do
-		sleep_time=$(expr $(rate_limit_first $ready_times) - $now)
-		sleep $sleep_time
-		now=`date "+%s"`
+		_rlw_sleep_time=$(expr $(rate_limit_first $_rlw_ready_times) - $_rlw_now)
+		sleep $_rlw_sleep_time
+		_rlw_now=`date "+%s"`
 	done
 }
 
@@ -240,13 +240,13 @@ rate_limit_wait() {
 #   The failing status of the test terminating the loop; this may be ignored
 
 wait_for_rate_limits() {
-	for name
+	for _wfrl_name
 	do
-		rate_limit_wait $name
+		rate_limit_wait $_wfrl_name
 	done
 }
 
-# throttle name [time]
+# rate_limit_throttle name [time]
 #
 # Throttle an event using the named rate limit.
 #
@@ -278,12 +278,12 @@ rate_limit_throttle() {
 #     initially times long before now
 
 init_wget_rate_limit() {
-	name=`next_wget_name $wget_rate_limits`
-	init_rate_limit $name $1 $2
+	_iwrl_name=`next_wget_name $wget_rate_limits`
+	init_rate_limit $_iwrl_name $1 $2
 	shift 2
 	until [ $# -eq 0 ]
 	do
-		wget_rate_limits="$wget_rate_limits $1 $name"
+		wget_rate_limits="$wget_rate_limits $1 $_iwrl_name"
 		shift
 	done
 }
@@ -328,11 +328,11 @@ wget_hosts() {
 #   Rate limit names
 
 wget_rate_limits_for_host() {
-	target_host="$1"
+	_wrlfh_target_host="$1"
 	shift
 	until [ $# -eq 0 ]
 	do
-		if [ "$target_host" = "$1" ]
+		if [ "$_wrlfh_target_host" = "$1" ]
 		then
 			echo "$2"
 		fi
@@ -376,13 +376,13 @@ wget_rate_limits_for_hosts() {
 #     initially times long before now
 
 rate_limited_wget() {
-	hosts=`wget_hosts $*`
-	rate_limits=`wget_rate_limits_for_hosts $hosts`
-	wait_for_rate_limits $rate_limits
-	wget !*
-	status=$?
-	rate_limit_events $rate_limits
-	exit $status
+	_rlwg_hosts=`wget_hosts $*`
+	_rlwg_rate_limits=`wget_rate_limits_for_hosts $_rlwg_hosts`
+	wait_for_rate_limits $_rlwg_rate_limits
+	wget "!@"
+	_rlwg_status=$?
+	rate_limit_events $_rlwg_rate_limits
+	return $_rlwg_status
 }
 
 # vim: tabstop=8: autoindent
