@@ -1,3 +1,27 @@
+## Rate Limited Wget
+#
+# Throttle wget requests to stay below website rate limits.
+#
+# Copyright (C) 2025 by Joel Shprentz
+# https://github.com/jshprentz/rate_limited_wget
+# v0.0.1 (2025-05-15)
+#
+## Usage
+#
+# In a shell script, source this library. Initialize rate limits. Execute rate
+# limited wget instead of ordinary wget. For example,
+#
+#   . rate_limited_wget.sh
+#   init_wget_rate_limit 60 3600 github.com raw.githubusercontent.com
+#   rate_limited_wget -q https://raw.githubusercontent.com/jshprentz/rate_limited_wget/refs/heads/main/README.md
+#
+## Documentation: https://github.com/jshprentz/rate_limited_wget#rate_limited_wget
+#
+## Begin Change Log
+# 2025-05-15 0.0.1 The library emerges from the primordial ooze.
+## End Change Log
+
+#
 # ========= Shell Utilities =========
 #
 

@@ -1,3 +1,26 @@
+## Tests for Rate Limited Wget
+#
+# Copyright (C) 2025 by Joel Shprentz
+# https://github.com/jshprentz/rate_limited_wget
+# v0.0.1 (2025-05-15)
+#
+## Usage
+#
+# To run the development tests, download the rate limited wget project
+# (typically with git clone), install the ShellSpec testing framework,
+# and execute shellspec. For example,
+#
+#   git clone https://github.com/jshprentz/rate_limited_wget.git
+#   wget -O- https://git.io/shellspec | sh
+#   cd rate_limited_wget
+#   shellspec
+#
+# ShellSpec: https://github.com/shellspec/shellspec#shellspec-full-featured-bdd-unit-testing-framework
+#
+## Begin Change Log
+# 2025-05-15 0.0.1 The library emerges from the primordial ooze.
+## End Change Log
+
 Include 'lib/rate_limited_wget.sh'
 
 Describe 'Rate limiter now'
