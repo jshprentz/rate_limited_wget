@@ -129,7 +129,7 @@ gantt
     Limit 4 requests     :13, 10s
 ```
 
-The library maintains a list of _ready times_ when the rate limit time periods end.
+Each rate limit has a list of _ready times,_ the times when the rate limit time periods end.
 The ready times after the sixth request above are: 14, 17, 20, and 23.
 
 If the next ```wget``` request comes before the earliest ready time, 14 seconds, the
@@ -140,3 +140,11 @@ In either case, the earliest ready time will be replaced in the list by a new re
 the sum of the current time (14 or later) plus the rate limit period (10 seconds).
 For example, if the request completed at time 15, the ready time list would then contain:
 17, 20, 23, and 25.
+
+The library represents ready times as integer Linux epoch seconds, the value reported by
+the command:
+```shell
+date "+%s"
+```
+One-second granularity is sufficient for rate limits with time periods typically specified
+in minutes, hours, or days.
