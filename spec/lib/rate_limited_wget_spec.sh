@@ -410,6 +410,14 @@ Describe 'Rate limited wget'
     The output should eq "<<https://sample.com/foo.py>> <<--requester>> <<John O'Malley>> <<--cost>> <<"'$'"3.00>>"
     End
 
+  It 'returns the wget status'
+    wget() {
+      return 18
+    }
+    When call rate_limited_wget "https://example.com/bar.txt" 
+    The status should eq 18
+  End
+
   It 'does not delay the first few requests'
     wget() {
       true
