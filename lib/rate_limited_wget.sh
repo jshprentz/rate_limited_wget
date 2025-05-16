@@ -380,7 +380,7 @@ wget_rate_limits_for_hosts() {
 	done
 }
 
-# rate_limited_wget args
+# rate_limited_wget arg...
 #
 # Run wget with the supplied arguments after waiting for any rate limits
 #
@@ -405,6 +405,21 @@ rate_limited_wget() {
 	_rlwg_status=$?
 	rate_limit_events $_rlwg_rate_limits
 	return $_rlwg_status
+}
+
+# rate_limited_extra host...
+#
+# Track extra host accesses that were not managed by rate_limited_wget.
+#
+# Arguments
+#   Hosts
+#
+# Globals Created or Modified
+#   rl_ready_times_<name>: list of ready times in Linux epoch seconds,
+#     initially times long before now
+
+rate_limited_extra() {
+	rate_limit_events `wget_rate_limits_for_hosts $*`
 }
 
 # vim: tabstop=8: autoindent

@@ -456,6 +456,26 @@ Describe 'Rate limited wget'
     The status should be success
   End
 
+  It 'delays the request after the rate limit is satisfied by extras'
+    wget() {
+      true
+    }
+    check_elapsed_time() {
+      start_time=`date "+%s"`
+      rate_limited_extra example.com
+      rate_limited_extra example.com
+      rate_limited_extra example.com
+      rate_limited_wget https://example.com/foo/bar.html
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -lt 2 && echo "duration < 2:" $duration && return 1
+      test $duration -gt 4 && echo "duration > 4:" $duration && return 1
+      return 0
+    }
+    When call check_elapsed_time
+    The status should be success
+  End
+
   It 'delays requests after the rate limit is satisfied'
     wget() {
       sleep 1

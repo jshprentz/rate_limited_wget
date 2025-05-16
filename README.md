@@ -63,7 +63,7 @@ init_wget_rate_limit 15 60 www.example.com
 init_wget_rate_limit 1000 86400 www.example.com www.sample.com api.foo.com media.bar.com
 ```
 
-## Wget Requests
+### Wget Requests
 
 Replace ```wget``` with ```rate_limited_wget``` to rate-limit the request.
 ```rate_limited_wget``` will extract hostnames from all URLs, lookup related rate limits,
@@ -88,6 +88,48 @@ Use the variable in place of ```wget``` or ```rate_limited_wget```:
 ```shell
 $WGET https://www.example.com/media/1234.mp4 -O cat-video.mp4 --no-cache
 ```
+
+### Tracking Extra Requests
+
+The ```rate_limited_extra``` function tracks ```wget``` (and similar) requests made without
+using ```rate_limited_wget```.
+Those include requests made before the ```rate_limited_wget``` library was loaded
+and requests made by other scripts.
+Websites will count those requests toward their rate limits, so they should be tracked locally.
+
+The function signature is:
+```shell
+rate_limited_extra host...
+```
+
+### Example
+
+A script downloads the ```rate_limited_extra``` library using ```wget``` as described [above](#installation).
+This download counts towards GitHub's rate limits.
+The script can track this download locally in a shell variable, which later can be passed to
+the ```rate_limited_extra``` function.
+
+The example code below
+
+1. downloads the library if necessary,
+2. notes the download in a shell variable,
+3. loads the library,
+4. initializes a rate limit for GitHub, and 
+5. tracks the possible extra download in the GitHub rate limit.
+
+```shell
+if [ ! -f rate_limited_wget.sh ]; then
+        wget https://github.com/jshprentz/rate_limited_wget/blob/main/lib/rate_limited_wget.sh
+        extra_download="github.com"
+fi
+
+. rate_limited_wget.sh
+
+init_wget_rate_limit 60 3600 github.com
+
+rate_limited_extra $extra_download
+```
+
 ## Theory of Operation
 
 ### Rate Limits
