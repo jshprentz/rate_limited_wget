@@ -469,6 +469,25 @@ Describe 'Rate limited wget'
     The status should be success
   End
 
+  It 'does not delay requests to websites without rate limits'
+    wget() {
+      true
+    }
+    check_elapsed_time() {
+      start_time=`date "+%s"`
+      rate_limited_wget https://sample.com/foo/bar.html
+      rate_limited_wget https://sample.com/foo/bar.html
+      rate_limited_wget https://sample.com/foo/bar.html
+      rate_limited_wget https://sample.com/foo/bar.html
+      end_time=`date "+%s"`
+      duration=`expr $end_time - $start_time`
+      test $duration -gt 1 && echo "duration > 1:" $duration && return 1
+      return 0
+    }
+    When call check_elapsed_time
+    The status should be success
+  End
+
 End
 
 # vim: tabstop=8: expandtab shiftwidth=2 softtabstop=2 autoindent
