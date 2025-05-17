@@ -102,7 +102,7 @@ The function signature is:
 rate_limited_extra host...
 ```
 
-### Example
+#### Example
 
 A script downloads the ```rate_limited_extra``` library using ```wget``` as described [above](#installation).
 This download counts towards GitHub's rate limits.
@@ -132,6 +132,38 @@ rate_limited_extra $extra_download
 
 ## Theory of Operation
 
+### Web Requests Without Rate Limits
+
+A typical installation script alternates between downloading files and installing them.
+This timeline show a sequence ```wget``` commands that initiate downloads followed
+by installations.
+These activites proceed one after another without any delay.
+
+```mermaid
+gantt
+    title Scripted Downloads and Installs (times in seconds)
+    dateFormat  s
+    axisFormat %S
+    wget 1                :milestone, m1, 0, 0s
+    Download              :d1, after m1, 1s
+    Install               :i1, after d1, 1s
+    wget 2                :milestone, m2, after i1, 0s
+    Download              :d2, after m2, 1s
+    Install               :i2, after d2, 1s
+    wget 3                :milestone, m3, after i2, 0s
+    Download              :d3, after m3, 1s
+    Install               :i3, after d3, 1s
+    wget 4                :milestone, m4, after i3, 0s
+    Download              :d4, after m4, 1s
+    Install               :i4, after d4, 1s
+    wget 5                :milestone, m5, after i4, 0s
+    Download              :d5, after m5, 1s
+    Install               :i5, after d5, 1s
+    wget 6                :milestone, m6, after i5, 0s
+    Download              :d6, after m6, 1s
+    Install               :i6, after d6, 1s
+```
+
 ### Rate Limits
 
 Many websites impose rate limits on web requests.
@@ -143,45 +175,57 @@ specify some level of service provided.
 
 ### Modeling Rate Limits
 
-In the library, each ```wget``` request begins a time period during which a limited number of requests are allowed.
+In the library, the completion of each ```wget``` request begins a time period during which a limited number of requests are allowed.
+The count starts at 1 for the just-completed ```wget``` request.
 Once the request count reaches the limit, additional requests must wait until the time period has elapsed.
 
 This timeline shows six requests that are rate limited to 4 requests per 10 seconds.
 The first four requests are executed without delay.
-(The example timing of these requests reflects time needed to decompress, unpack, and compile code.)
-The fifth request cannot begin until after the rate limit time period starting with the first event.
-Similarly, the sixth request cannot begin until after the rate limit time period starting with the second event.
+The fifth request cannot begin until the conclusion the rate limit time period starting after the first download request.
+The sixth request proceeds without delay.
 
 ```mermaid
 gantt
-    title Rate Limit: 4 requests per 10 seconds
+    title Rate Limited Downloads and Installs (times in seconds)
     dateFormat  s
     axisFormat %S
-    wget 1                :milestone, 0, 0
-    Limit 4 requests     :0, 10s
-    wget 2                :milestone, 3, 3
-    Limit 4 requests     :3, 10s
-    wget 3                :milestone, 4, 4
-    Limit 4 requests      :4, 10s
-    wget 4                :milestone, 7, 7
-    Limit 4 requests      :7, 10s
-    wget 5                :milestone, 10, 10
-    Limit 4 requests     :10, 10s
-    wget 6                :milestone, 13, 13
-    Limit 4 requests     :13, 10s
+    rate_limited_wget 1   :milestone, w1, 0, 0
+    Download              :d1, after w1, 1s
+    Limit of 4 requests   :done, l1, after d1, 10s
+    Install               :after d1, 1s
+    rate_limited_wget 2    :milestone, w2, 2, 2
+    Download              :d2, after w2, 1s
+    Limit of 4 requests   :done, after d2, 10s
+    Install               :after d2, 1s
+    rate_limited_wget 3   :milestone, w3, 4, 4
+    Download              :d3, after w3, 1s
+    Limit of 4 requests   :done, after d3, 10s
+    Install               :after d3, 1s
+    rate_limited_wget 4   :milestone, w4, 6, 6
+    Download              :d4, after w4, 1s
+    Limit of 4 requests   :done, after d4, 10s
+    Install               :i4, after d4, 1s
+    rate_limited_wget 5   :milestone, w5, after i4, 0s
+    Delay                 :crit, delay5, after w5, until d5
+    Download              :d5, after l1, 1s
+    Limit of 4 requests   :done, after d5, 10s
+    Install               :i5, after d5, 1s
+    rate_limited_wget 6   :milestone, w6, after i5, 0s
+    Download              :d6, after w6, 1s
+    Limit of 4 requests   :done, after d6, 10s
+    Install               :after d6, 1s
 ```
 
-Each rate limit has a list of _ready times,_ the times when the rate limit time periods end.
-The ready times after the sixth request above are: 14, 17, 20, and 23.
+The library represents each rate limit as a list of _ready times,_ the times when the rate limit time periods end.
+The ready times after the first four requests above are: 11, 13, 15, and 17.
 
-If the next ```wget``` request comes before the earliest ready time, 14 seconds, the
-rate limiter wil delay the request until time 14.
-If the next request comes after the earliest ready time, the request will be executed immediately.
+The fifth ```rate_limited_wget``` request comes before the earliest ready time, 11 seconds, so the
+rate limiter will delay the request until time 11.
+After the fifth download completes, the ready times are: 13, 15, 17, and 22.
 
-In either case, the earliest ready time will be replaced in the list by a new ready time:
-the sum of the current time (14 or later) plus the rate limit period (10 seconds).
-For example, if the request completed at time 15, the ready time list would then contain:
-17, 20, 23, and 25.
+The sixth ```rate_limited_wget``` request comes at the earliest ready time, 13 seconds, so the
+rate limiter executes the ```wget``` download immediately.
+After the sixth download completes, the ready times are: 15, 17, 22, and 24.
 
 The library represents ready times as integer Linux epoch seconds, the value reported by
 the command:
