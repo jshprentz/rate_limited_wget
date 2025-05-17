@@ -15,7 +15,7 @@
 #   init_wget_rate_limit 60 3600 github.com raw.githubusercontent.com
 #   rate_limited_wget -q https://raw.githubusercontent.com/jshprentz/rate_limited_wget/refs/heads/main/README.md
 #
-## Documentation: https://github.com/jshprentz/rate_limited_wget#rate_limited_wget
+## Documentation: https://github.com/jshprentz/rate_limited_wget/blob/main/README.md
 #
 ## Begin Change Log
 # 2025-05-15 0.0.1 The library emerges from the primordial ooze.

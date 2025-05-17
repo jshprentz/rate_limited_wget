@@ -1,4 +1,4 @@
-# rate_limited_wget
+# Rate Limited Wget for Posix Shell Scripts
 Respect website and API rate limits when retrieving with ```wget```.
 
 The ```rate_limited_wget``` library contains Posix compliant shell functions to delay
